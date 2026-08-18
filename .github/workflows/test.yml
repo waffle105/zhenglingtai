@@ -1,0 +1,92 @@
+# 政令台 · CI 配置
+# ============================================
+# 用法：放到 .github/workflows/test.yml
+#       或用 CodeBuddy CI 等效配置
+# 触发：push / PR 到 main 分支
+# 矩阵：Python 3.10 / 3.11 / 3.12 × ubuntu / macos / windows
+
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: 安装依赖
+        run: |
+          cd cli
+          pip install -e ".[dev]"
+
+      - name: AST 语法检查
+        run: |
+          python -c "
+          import ast, pathlib
+          for f in pathlib.Path('cli/zhenglingtai_cli').glob('**/*.py'):
+              ast.parse(f.read_text())
+              print(f'  ✔ {f}')
+          "
+
+      - name: YAML frontmatter 检查
+        run: |
+          python -c "
+          import re
+          text = open('zhenglingtai/SKILL.md', encoding='utf-8').read()
+          m = re.match(r'^---\s*\n(.*?)\n---\s*\n', text, re.DOTALL)
+          assert m, 'SKILL.md 无 frontmatter'
+          block = m.group(1)
+          comments = sum(1 for l in block.splitlines() if l.strip().startswith('#'))
+          assert comments == 0, f'frontmatter 含 {comments} 行 # 注释'
+          print('  ✔ SKILL.md frontmatter 合法')
+          "
+
+      - name: 通用版承诺扫描
+        run: |
+          python -c "
+          import subprocess, sys
+          # 排除 .github（pattern 字面量写在本 workflow 里，不排会自命中）
+          # 排除 CHANGELOG.md（历史档案要如实记录被修掉的私有名，属合法残留）
+          pat = '内容工厂|营销全链路|excel-data-clean|leijun-sales-copy|AI剪口播|content-factory'
+          r = subprocess.run(
+              ['grep', '-rn', '--exclude-dir=.github', '--exclude=CHANGELOG.md',
+               '-E', pat, 'zhenglingtai/'],
+              capture_output=True, text=True)
+          if r.stdout.strip():
+              print('✘ 私有名残留：'); print(r.stdout); sys.exit(1)
+          print('  ✔ 通用版承诺：零命中')
+          "
+
+      - name: 三形态 schema 一致性检查（v1.0.3）
+        run: |
+          cd cli
+          pip install -e .
+          cd ..
+          python zhenglingtai/scripts/check_schema_sync.py
+
+      - name: 跑测试
+        run: |
+          cd cli
+          pytest tests/ -v --tb=short
+
+      - name: 覆盖率（仅 ubuntu + 3.12）
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        run: |
+          pip install pytest-cov
+          cd cli
+          pytest tests/ --cov=zhenglingtai_cli --cov-report=term-missing
