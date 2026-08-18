@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# 政令台 CLI（B 形态 / 纪律层的脱壳版）
+# Python 包名 zhenglingtai-cli（import 为 zhenglingtai_cli），
+# 是 `zhenglingtai/` 元 skill 的可选附件——并不独立组成新 skill 形态。
+[project]
+name = "zhenglingtai-cli"
+version = "1.2.0"
+description = "政令台 CLI — 通用政令执行纪律层（B 形态/可选附件）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "WorkBuddy AI Assistant (协作开发 + 用户拍板)" },
+]
+keywords = ["llm", "orchestration", "discipline", "workbuddy", "decree"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+# 依赖策略：标准库为主，第三方只引 HTTP + YAML
+dependencies = [
+  "PyYAML>=6.0",
+  "httpx>=0.25",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "black>=24.0", "ruff>=0.4"]
+
+# v1.0.3：console_script 由 "zhengling" 改名为 "zlt"——
+# 旧名与 install.sh 装的 bash shim（~/.local/bin/zhengling）冲突：
+# pip 入口没有 doctor 子命令（doctor 属 shim 层），但 PATH 里 pip 的 bin
+# 常常排在 ~/.local/bin 前面 → 新用户装完跑 `zhengling doctor` 必翻车。
+# 现在：shim 独占 zhengling（含 doctor）；pip 直连入口叫 zlt。
+[project.scripts]
+zlt = "zhenglingtai_cli.__main__:main"
+
+[tool.setuptools]
+packages = ["zhenglingtai_cli"]
+
+[tool.setuptools.package-data]
+zhenglingtai_cli = ["templates/*.md"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
