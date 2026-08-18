@@ -1,0 +1,18 @@
+# 政令台 CLI（B 形态 / 可选附件）配置样例
+# 用法：
+#   cp config.example.yaml zlt.config.yaml
+#   编辑 base_url / api_key / model
+#   zhengling health      # 验证
+#   zhengling run "..."   # 跑政令
+
+base_url: "https://api.deepseek.com/v1"   # OpenAI 兼容服务地址
+api_key: "sk-xxxxxxxxxxxxxxxxxxxx"        # API key
+model: "deepseek-chat"
+
+# 注释：
+# - 国内常用：DeepSeek / 智谱 / 月之暗面
+# - 国际：OpenAI / Groq / Anthropic 代理
+# - 本地：Ollama http://localhost:11434/v1
+
+# HARD: api_key 绝不入仓库；用环境变量 ZLT_API_KEY 注入更安全
+# HARD: base_url 必须 https；http 协议会泄露你的 key
