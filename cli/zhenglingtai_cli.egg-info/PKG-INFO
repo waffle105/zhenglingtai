@@ -1,0 +1,54 @@
+Metadata-Version: 2.4
+Name: zhenglingtai-cli
+Version: 1.2.0
+Summary: 政令台 CLI — 通用政令执行纪律层（B 形态/可选附件）
+Author: WorkBuddy AI Assistant (协作开发 + 用户拍板)
+License: MIT
+Keywords: llm,orchestration,discipline,workbuddy,decree
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: httpx>=0.25
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: black>=24.0; extra == "dev"
+Requires-Dist: ruff>=0.4; extra == "dev"
+
+# zhenglingtai-cli（政令台 CLI · B 形态）
+
+政令台的 Python CLI 附件——把"通译 → 流转 → 执行 → 验收"四层纪律带到终端，
+与 WorkBuddy 元 Skill（A 形态）共用同一套任务书 / 工序单 / 验收单 schema。
+
+## 安装
+
+```bash
+pip install -e .        # 开发模式
+# 或
+pip install .           # 常规安装
+```
+
+安装后得到 **`zlt`** 命令（v1.0.3 起；旧名 `zhengling` 与 shim 冲突已改名）。
+
+## 用法
+
+```bash
+zlt health                 # 自检（不调 LLM）
+zlt registry               # 列出登记册里可路由的 skill
+zlt translate "你的指令"    # 只跑通译层
+zlt run "你的指令"          # 跑完整四层
+```
+
+> **zlt vs zhengling：** `zhengling` 是聚合 shim（`bin/`，含 `doctor` / `uninstall`），
+> 由 `install.sh` / `install.ps1` 安装；`zlt` 是本 pip 包的直连入口。
+> 两个都装了时，日常用 `zhengling`（功能超集）即可。
+
+LLM 配置：复制 `config.example.yaml` 为 `zlt.config.yaml`，填入 OpenAI 兼容服务的
+`base_url` / `api_key` / `model`；或用环境变量 `ZLT_BASE_URL` / `ZLT_API_KEY` / `ZLT_MODEL` 注入。
+
+完整文档见包根目录 `../README.md` 与 `../docs/`。
