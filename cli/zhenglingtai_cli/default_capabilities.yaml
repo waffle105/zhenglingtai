@@ -1,0 +1,46 @@
+# 默认 capabilities 模板
+# ============================================
+# 用途：`zhengling capabilities init` 扫描登记册后生成此文件的实例。
+#       用户照着填 kind/target/url/cmd 即可把 noop 换成真实执行。
+#
+# 四种 kind：
+#   local = 本地 Python 函数（target: "module:function"）
+#   http  = HTTP POST（url / method / headers / body_template）
+#   cli   = 本地命令行（cmd + args 模板，占位符用 $input / $output）
+#   noop  = 不实际执行（默认值，用于通用模式/演示）
+#
+# 安全提示（HARD）：
+#   - http 的 body_template 用 $input / $output 占位符（不用 {input}，防格式化字符串攻击）
+#   - cli 的 args 同上
+#   - api_key / token 不要写进本文件——用环境变量注入
+
+_default:
+  kind: noop
+  hint: "在 zhenglingtai-capabilities.yaml 配置此 skill 的真实执行方式（kind: local/http/cli）"
+
+# 示范条目（实际 skill id 由 zhengling capabilities init 扫描生成）：
+#
+# example-excel-clean:
+#   kind: local
+#   target: "my_tools.excel:clean_and_normalize"
+#   hint: "清洗 Excel 并输出规范版"
+#
+# example-llm-api:
+#   kind: http
+#   url: "https://api.deepseek.com/v1/chat/completions"
+#   method: POST
+#   headers:
+#     Authorization: "Bearer $ZLT_API_KEY"
+#     Content-Type: "application/json"
+#   body_template:
+#     model: "deepseek-chat"
+#     messages:
+#       - role: "user"
+#         content: "$input"
+#
+# example-shell:
+#   kind: cli
+#   cmd: "python3"
+#   args:
+#     - "-c"
+#     - "print('$input')"
