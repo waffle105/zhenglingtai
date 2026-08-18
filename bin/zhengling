@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# zhengling · 政令台聚合入口（bash 版）
+# ============================================
+# 用途：对调用方透明地调度——自动探测环境，派发到 WB / CLI / 提示词
+# 行为：doctor 子命令直接调 detect.py；其它子命令先探测后派发。
+# 注释规范：每个段落写"为什么"，"如果 X 则 Y"显式注释。
+# 版本：v1.2.0
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+BUNDLE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+dispatch() {
+    local subcmd="$1"
+    shift
+
+    if [ "$subcmd" = "doctor" ] || [ "$subcmd" = "health" ]; then
+        exec python3 "${BUNDLE_ROOT}/doctor/detect.py" "$@"
+    fi
+
+    if [ "$subcmd" = "uninstall" ]; then
+        exec bash "${BUNDLE_ROOT}/install.sh" --uninstall "$@"
+    fi
+
+    local active
+    active="$(python3 "${BUNDLE_ROOT}/doctor/detect.py" --json 2>/dev/null \
+        | python3 -c 'import sys, json; print(json.load(sys.stdin).get("active", "NONE"))')"
+
+    case "$active" in
+        WB)
+            cat <<EOF
+[zhengling] 已在 WorkBuddy 内（SKILL.md 被加载）。
+    请在 WorkBuddy 对话框里输入：
+
+        zhengling run "$*"
+
+    在 WorkBuddy 里会自动被政令台元 Skill 接住。
+EOF
+            exit 0
+            ;;
+
+        CLI)
+            exec python3 -m zhenglingtai_cli "$subcmd" "$@"
+            ;;
+
+        PROMPT)
+            cat <<EOF
+[zhengling] 终端 zhengling CLI 未装。
+    请把下面这段粘进任意 LLM 对话框的 system 指令里，然后发指令：
+
+        $(cat "${HOME}/.zhenglingtai/prompts/fans/deepseek-system-prompt.md" 2>/dev/null \
+          || echo "(提示词未安装——请跑 ./install.sh)")
+
+---
+
+    或者：跑 ./install.sh 完整安装后再用 CLI。
+EOF
+            exit 0
+            ;;
+
+        *)
+            echo "[zhengling] 三块都没装。请跑 ./install.sh。" >&2
+            exit 2
+            ;;
+    esac
+}
+
+main() {
+    subcmd="${1:-doctor}"
+    shift 2>/dev/null || true
+
+    case "$subcmd" in
+        -h|--help|help)
+            cat <<EOF
+zhengling · 政令台聚合入口
+
+用法：
+    zhengling                                # 自检（默认 = doctor）
+    zhengling doctor                         # 同上
+    zhengling doctor --explain               # 解释为何选这个
+    zhengling doctor --json                  # JSON 输出
+    zhengling run "<你的指令>"               # 跑完整四层
+    zhengling translate "<你的指令>"         # 只跑通译
+    zhengling registry                       # 看本机登记册
+    zhengling uninstall                      # 反向安装
+EOF
+            ;;
+        doctor|health|run|translate|registry|verify)
+            dispatch "$subcmd" "$@"
+            ;;
+        *)
+            echo "[zhengling] 未知子命令：$subcmd" >&2
+            return 1
+            ;;
+    esac
+}
+
+main "$@"
