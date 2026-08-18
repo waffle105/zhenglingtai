@@ -1,0 +1,151 @@
+{
+  "version": "1.0.3",
+  "description": "路由准确率回归基准——layer2_route_deterministic 的典型场景数据集。新增用例请附场景说明。",
+  "cases": [
+    {
+      "name": "单意图单候选 → 直中",
+      "task_tags": ["write_copy"],
+      "registry": [
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]}
+      ],
+      "expect_main": "copy-writer",
+      "expect_coop": [],
+      "expect_meta": ""
+    },
+    {
+      "name": "单意图多候选撞同一产出 → 标签更全的胜（最具体优先）",
+      "task_tags": ["write_copy", "write_copy_sales"],
+      "registry": [
+        {"id": "generic-copy", "intent_tags": ["write_copy"], "output_types": ["md"]},
+        {"id": "sales-copy", "intent_tags": ["write_copy", "write_copy_sales"], "output_types": ["md"]}
+      ],
+      "expect_main": "sales-copy",
+      "expect_coop": [],
+      "expect_meta": ""
+    },
+    {
+      "name": "双意图双候选 outputs 不重叠 → 协同串行",
+      "task_tags": ["clean_excel", "write_copy"],
+      "registry": [
+        {"id": "excel-cleaner", "intent_tags": ["clean_excel"], "output_types": ["xlsx"]},
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]}
+      ],
+      "expect_coop_len": 1,
+      "expect_meta": ""
+    },
+    {
+      "name": "最高分是 meta-skill → 整条委托",
+      "task_tags": ["content_produce"],
+      "registry": [
+        {"id": "pipeline-x", "intent_tags": ["content_produce"], "output_types": ["md", "png"], "is_meta": true},
+        {"id": "copy-writer", "intent_tags": ["content_produce"], "output_types": ["md"]}
+      ],
+      "expect_main": "(meta委托)",
+      "expect_meta": "pipeline-x"
+    },
+    {
+      "name": "meta 非最高分 → 不委托，走普通 skill",
+      "task_tags": ["write_copy", "write_copy_sales"],
+      "registry": [
+        {"id": "sales-copy", "intent_tags": ["write_copy", "write_copy_sales"], "output_types": ["md"]},
+        {"id": "pipeline-x", "intent_tags": ["write_copy"], "output_types": ["md"], "is_meta": true}
+      ],
+      "expect_main": "sales-copy",
+      "expect_meta": ""
+    },
+    {
+      "name": "登记册为空 → 通用模式",
+      "task_tags": ["write_copy"],
+      "registry": [],
+      "expect_main": "(无登记)",
+      "expect_meta": ""
+    },
+    {
+      "name": "任务书 intent_tags 为空 → 通用模式",
+      "task_tags": [],
+      "registry": [
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]}
+      ],
+      "expect_main": "(无登记)",
+      "expect_meta": ""
+    },
+    {
+      "name": "标签与登记册零交集 → 通用模式",
+      "task_tags": ["video_gen"],
+      "registry": [
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]}
+      ],
+      "expect_main": "(无登记)",
+      "expect_meta": ""
+    },
+    {
+      "name": "自指排除：政令台自身即使标签命中也不参与路由",
+      "task_tags": ["decree_mode"],
+      "registry": [
+        {"id": "zhenglingtai", "intent_tags": ["decree_mode", "orchestrate_skills"], "output_types": ["md"], "is_meta": true}
+      ],
+      "expect_main": "(无登记)",
+      "expect_meta": ""
+    },
+    {
+      "name": "priority 加权：同标签命中时高 priority 胜",
+      "task_tags": ["make_ppt"],
+      "registry": [
+        {"id": "ppt-basic", "intent_tags": ["make_ppt"], "output_types": ["pptx"], "priority": 0},
+        {"id": "ppt-pro", "intent_tags": ["make_ppt"], "output_types": ["pptx"], "priority": 50}
+      ],
+      "expect_main": "ppt-pro",
+      "expect_meta": ""
+    },
+    {
+      "name": "部分命中也可路由（2 意图命中 1 个）",
+      "task_tags": ["competitor_analysis", "web_research"],
+      "registry": [
+        {"id": "researcher", "intent_tags": ["web_research"], "output_types": ["md"]}
+      ],
+      "expect_main": "researcher",
+      "expect_meta": ""
+    },
+    {
+      "name": "第三个候选 outputs 与主+协同重叠 → 不入协同链",
+      "task_tags": ["clean_excel", "data_analysis", "write_copy"],
+      "registry": [
+        {"id": "excel-cleaner", "intent_tags": ["clean_excel"], "output_types": ["xlsx"]},
+        {"id": "analyzer", "intent_tags": ["data_analysis"], "output_types": ["md"]},
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]}
+      ],
+      "expect_coop_len": 1,
+      "expect_meta": ""
+    },
+    {
+      "name": "数据任务典型：清洗+分析双意图",
+      "task_tags": ["clean_excel", "data_analysis"],
+      "registry": [
+        {"id": "excel-cleaner", "intent_tags": ["clean_excel", "normalize_table", "dedupe_rows"], "output_types": ["xlsx"]},
+        {"id": "analyzer", "intent_tags": ["data_analysis"], "output_types": ["md", "png"]}
+      ],
+      "expect_main": "excel-cleaner",
+      "expect_coop_len": 1,
+      "expect_meta": ""
+    },
+    {
+      "name": "培训场景：课程方案单意图",
+      "task_tags": ["course_plan"],
+      "registry": [
+        {"id": "course-designer", "intent_tags": ["course_plan", "instructional_design"], "output_types": ["md"]},
+        {"id": "doc-writer", "intent_tags": ["training_doc"], "output_types": ["md"]}
+      ],
+      "expect_main": "course-designer",
+      "expect_meta": ""
+    },
+    {
+      "name": "多标签同分 → 结果确定性（重跑一致）",
+      "task_tags": ["write_copy", "clean_excel"],
+      "registry": [
+        {"id": "copy-writer", "intent_tags": ["write_copy"], "output_types": ["md"]},
+        {"id": "excel-cleaner", "intent_tags": ["clean_excel"], "output_types": ["xlsx"]}
+      ],
+      "expect_repeat_stable": true
+    }
+  ]
+}
