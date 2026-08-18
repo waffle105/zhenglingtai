@@ -1,0 +1,2 @@
+[console_scripts]
+zlt = zhenglingtai_cli.__main__:main
