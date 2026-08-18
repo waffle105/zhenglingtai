@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "政令档 META",
+  "description": "每个政令档目录下的 META.json——记录该政令的元数据，用于验收追踪和自学习反哺。",
+  "type": "object",
+  "required": [
+    "decree_id",
+    "created_at",
+    "intent_tags",
+    "resolved_skills",
+    "outputs",
+    "accept_status",
+    "history"
+  ],
+  "properties": {
+    "decree_id": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}-.+$",
+      "description": "政令唯一标识：日期 + 意图缩写 + 短随机"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 创建时间"
+    },
+    "intent_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "该政令的意图标签（从 registry/intent-tags.md 选词）"
+    },
+    "resolved_skills": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "路由匹配到的 skill id 列表；通用模式下为空"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "path"],
+        "properties": {
+          "type": { "type": "string", "description": "产出类型：md/xlsx/pptx/png/mp4/py 等" },
+          "path": { "type": "string", "description": "相对于政令档目录的路径" },
+          "bytes": { "type": "integer", "minimum": 0, "description": "文件大小" },
+          "summary": { "type": "string", "description": "一句话摘要" }
+        }
+      },
+      "description": "该政令的实际产出物列表"
+    },
+    "accept_status": {
+      "type": "string",
+      "enum": ["达标", "未达标", "待用户确认"],
+      "description": "验收结论"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["layer", "action", "timestamp"],
+        "properties": {
+          "layer": { "type": "string", "enum": ["通译", "流转", "执行", "验收"] },
+          "action": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "duration_ms": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "description": "四层执行历史，每层至少一条；封驳打回重跑时，执行/验收层会按轮次追加多条"
+    },
+    "subjective_pending": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "待用户主观确认的项"
+    },
+    "retries": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "验收打回次数"
+    }
+  }
+}
